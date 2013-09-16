@@ -1164,10 +1164,12 @@
     sub_proto.subscribe = function (callback) {
         var centrifugeMessage = {
             "method": "subscribe",
-            "params": {
-                "namespace": this.namespace,
-                "channel": this.channel
-            }
+            "params": [
+                {
+                    "namespace": this.namespace,
+                    "channel": this.channel
+                }
+            ]
         };
         if (this.namespace === null) {
             // using default namespace

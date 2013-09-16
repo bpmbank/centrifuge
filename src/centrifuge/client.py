@@ -297,13 +297,67 @@ class Client(object):
         raise Return((self.uid, None))
 
     @coroutine
+    def handle_subscribe_many(self, params):
+
+        project, error = yield self.get_project(self.project_id)
+        if error:
+            raise Return((None, error))
+
+        auth_address = project.get('auth_address', None)
+        if not auth_address:
+            raise Return((None, 'no auth address found'))
+
+        project_id = self.project_id
+
+        data = {
+            "user": self.user,
+            "auth": []
+        }
+
+        to_authorize = []
+
+        for entry in params:
+            namespace, error = yield self.get_namespace(project, entry)
+            if error:
+                raise Return((None, error))
+            namespace_name = namespace['name']
+
+            channel = entry.get('channel')
+            if not channel:
+                raise Return((None, 'channel required'))
+
+            is_private = namespace.get('is_private', False)
+
+            if is_private:
+
+                to_authorize.append(entry)
+
+        data["auth"] = to_authorize
+
+        #is_authorized, error = yield self.authorize(
+        #    auth_address, project, data
+        #)
+        print data
+        #if error:
+        #    raise Return((None, self.application.INTERNAL_SERVER_ERROR))
+        #if not is_authorized:
+        #    raise Return((None, self.application.PERMISSION_DENIED))
+
+    @coroutine
     def handle_subscribe(self, params):
         """
         Subscribe client on channel.
         """
+        print 11
+
         project, error = yield self.get_project(self.project_id)
         if error:
             raise Return((None, error))
+
+        res, err = yield self.handle_subscribe_many(params)
+
+        print res, err
+        raise Return((True, None))
 
         namespace, error = yield self.get_namespace(project, params)
         if error:
