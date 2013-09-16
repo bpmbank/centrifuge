@@ -79,19 +79,25 @@ client_params_schema = {
     "presence": admin_params_schema["presence"],
     "history": admin_params_schema["history"],
     "subscribe": {
-        "type": "array",
-        "items": {
-            "type": "object",
-            "properties": {
-                "namespace": {
-                    "type": "string"
-                },
-                "channel": {
-                    "type": "string"
-                },
-                "required": ["channel"]
-            },
-        }
+        "type": "object",
+        "properties": {
+            "subscriptions": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "namespace": {
+                            "type": "string"
+                        },
+                        "channel": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["channel"]
+                }
+            }
+        },
+        "required": ["subscriptions"]
     },
     "unsubscribe": {
         "type": "object",

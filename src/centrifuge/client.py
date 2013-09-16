@@ -118,9 +118,12 @@ class Client(object):
             yield self.sock.close()
             raise Return((True, None))
 
+        print data
+
         try:
             validate(data, req_schema)
         except ValidationError as e:
+            print e
             response.error = str(e)
             self.send(response.as_message())
             yield self.sock.close()
@@ -154,12 +157,18 @@ class Client(object):
         try:
             validate(params, client_params_schema[method])
         except ValidationError as e:
+            print e
             response = Response(uid=uid, method=method, error=str(e))
             self.send(response.as_message())
             yield self.sock.close()
             raise Return((True, None))
 
-        response.body, response.error = yield func(params)
+        try:
+            response.body, response.error = yield func(params)
+        except Exception as e:
+            print e
+
+        print response.body, response.error
         self.send(response.as_message())
         raise Return((True, None))
 
@@ -293,7 +302,6 @@ class Client(object):
             self.send_presence_ping, self.application.presence_ping_interval
         )
         self.presence_ping.start()
-
         raise Return((self.uid, None))
 
     @coroutine
@@ -338,6 +346,7 @@ class Client(object):
         #    auth_address, project, data
         #)
         print data
+        raise Return((data, None))
         #if error:
         #    raise Return((None, self.application.INTERNAL_SERVER_ERROR))
         #if not is_authorized:
@@ -349,12 +358,13 @@ class Client(object):
         Subscribe client on channel.
         """
         print 11
-
         project, error = yield self.get_project(self.project_id)
         if error:
             raise Return((None, error))
 
-        res, err = yield self.handle_subscribe_many(params)
+        subscriptions = params["subscriptions"]
+        print subscriptions
+        res, err = yield self.handle_subscribe_many(subscriptions)
 
         print res, err
         raise Return((True, None))

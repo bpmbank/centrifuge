@@ -874,6 +874,7 @@
     };
 
     centrifuge_proto._subscribeResponse = function (message) {
+        console.log(message);
         var namespace = message.params["namespace"];
         var channel = message.params["channel"];
         var path = this._makePath(namespace, channel);
@@ -1164,12 +1165,14 @@
     sub_proto.subscribe = function (callback) {
         var centrifugeMessage = {
             "method": "subscribe",
-            "params": [
-                {
-                    "namespace": this.namespace,
-                    "channel": this.channel
-                }
-            ]
+            "params": {
+                "subscriptions": [
+                    {
+                        "namespace": this.namespace,
+                        "channel": this.channel
+                    }
+                ]
+            }
         };
         if (this.namespace === null) {
             // using default namespace
