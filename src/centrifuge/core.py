@@ -6,6 +6,7 @@
 import six
 import uuid
 import time
+import socket
 from functools import partial
 
 import tornado.web
@@ -83,10 +84,22 @@ class Application(tornado.web.Application):
         # list of coroutines that must be done after message publishing
         self.post_publish_callbacks = []
 
+        self.address = ""
+
         # initialize tornado's application
         super(Application, self).__init__(*args, **kwargs)
 
+    def get_current_node_address(self):
+        port = str(self.settings['options'].port)
+        try:
+            host = socket.gethostbyname(socket.gethostname())
+        except Exception as err:
+            logger.warning(err)
+            host = "?"
+        return host + ":" + port
+
     def initialize(self):
+        self.address = self.get_current_node_address()
         self.init_callbacks()
         self.init_structure()
         self.init_pubsub()
@@ -216,6 +229,22 @@ class Application(tornado.web.Application):
         share commands between running instances.
         """
         self.pubsub.publish_control_message(message)
+
+    def send_admin_message(self, message):
+        """
+        Send message to ADMIN channel. We use this channel to
+        send events to administrative interface.
+        """
+        self.pubsub.publish_admin_message(message)
+
+    def send_admin_log_message(self, data, status='info'):
+        message = {
+            "log": True,
+            "address": self.address,
+            "data": data,
+            "status": status
+        }
+        self.send_admin_message(message)
 
     def add_connection(self, project_id, user, uid, client):
         """

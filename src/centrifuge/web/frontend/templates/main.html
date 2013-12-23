@@ -47,6 +47,14 @@
     </li>
 </script>
 
+<script type="text/x-jsrender" id="log_entry_template">
+    <div class="log-entry {{!>status}}">
+        <span class="log-entry-time">{{!>local_time}}</span>
+        <span class="log-entry-node">[{{!>address}}]</span>
+        <span class="log-entry-message">{{!>data}}</span>
+    </div>
+</script>
+
 <div id="main-content">
     <div class="row">
         <div class="col-lg-3">
@@ -84,6 +92,9 @@
                         <span class="text-muted stat-key">{{ _("Nodes running") }}:</span>
                         &nbsp;
                         <span class="stat-value">{{ node_count }}</span>
+                    </div>
+                    <div id="log" class="log">
+
                     </div>
                 </div>
             </div>

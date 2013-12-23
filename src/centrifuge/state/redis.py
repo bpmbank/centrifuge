@@ -90,6 +90,10 @@ class State(BaseState):
     def check_connection(self):
         if not self.client.is_connected():
             logger.info('reconnecting to Redis')
+            self.application.send_admin_log_message(
+                "Redis connection failed, state unavailable, reconnecting...",
+                status='error'
+            )
             self.connect()
 
     @staticmethod

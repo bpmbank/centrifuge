@@ -6,6 +6,7 @@
                 tab_prefix: "/tab_",
                 max_tab_text_length: 10,
                 max_events_amount: 50,
+                max_log_entry_amount: 50,
                 current_user: {},
                 project_tab: '_info',
                 projects: [],
@@ -66,8 +67,11 @@
             var event_template = $('#event_template');
             var tab_template = $('#tab_template');
             var tab_pane_template = $('#tab_pane_template');
+            var log_entry_template = $('#log_entry_template');
 
             var project_settings_button = $('#project-settings');
+
+            var log = $('#log');
 
             var show_hashed_tab = function() {
                 var hash = document.location.hash;
@@ -154,28 +158,39 @@
                 counter.removeClass('hidden');
             };
 
-            var handle_event_message = function(data) {
-                var namespace = data['namespace'];
-                var event_id = data['uid'];
-                var channel = data['channel'];
-                var event_data = data['data'];
-                var project_id = data['project_id'];
-                project = get_project_by_id(project_id);
-                var active_tab_id = get_active_tab_id();
-                var tab = get_tab_for_project(project);
+            var handle_log_message = function(data) {
+                data["local_time"] = get_local_time();
+                var html = log_entry_template.render(data);
+                log.prepend(html);
+                log.find('.log-entry:gt(' + options.max_log_entry_amount + ')').remove();
+            };
 
-                if (tab.length > 0) {
-                    // tab already opened and meta already loaded
-                    var container = get_content_for_project(project).find('.log');
-                    render_event(container, project, namespace, event_id, channel, event_data);
+            var handle_event_message = function(data) {
+                if (data["log"] !== undefined) {
+                    handle_log_message(data);
                 } else {
-                    if (active_tab_id !== options.project_tab) {
-                        highlight_tab(global_projects[options.project_tab], true);
+                    var namespace = data['namespace'];
+                    var event_id = data['uid'];
+                    var channel = data['channel'];
+                    var event_data = data['data'];
+                    var project_id = data['project_id'];
+                    project = get_project_by_id(project_id);
+                    var active_tab_id = get_active_tab_id();
+                    var tab = get_tab_for_project(project);
+
+                    if (tab.length > 0) {
+                        // tab already opened and meta already loaded
+                        var container = get_content_for_project(project).find('.log');
+                        render_event(container, project, namespace, event_id, channel, event_data);
+                    } else {
+                        if (active_tab_id !== options.project_tab) {
+                            highlight_tab(global_projects[options.project_tab], true);
+                        }
                     }
-                }
-                if (active_tab_id !== project_id) {
-                    incr_project_event_counter(project);
-                    highlight_tab(project, true);
+                    if (active_tab_id !== project_id) {
+                        incr_project_event_counter(project);
+                        highlight_tab(project, true);
+                    }
                 }
             };
 
@@ -236,9 +251,12 @@
                 return ("0" + n).slice(-2);
             };
 
-            var render_event = function(container, project, namespace, event_id, channel, event_data) {
-
+            var get_local_time = function() {
                 var d = new Date();
+                return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            };
+
+            var render_event = function(container, project, namespace, event_id, channel, event_data) {
 
                 var html = event_template.render({
                     'event_id': event_id,
@@ -246,7 +264,7 @@
                     'data': prettify_json(event_data),
                     'namespace': namespace,
                     'project': project,
-                    'time': pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds())
+                    'time': get_local_time()
                 });
 
                 var prepared_html = prepare_html(html);
